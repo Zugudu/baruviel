@@ -17,6 +17,11 @@ def db_work(func):
 		cursor.close()
 		return ret
 	return wrap
+	
+	
+@route('/static/<file:path>')
+def load_static(file):
+	return static_file(file, 'static')
 
 
 def hash(text):
@@ -46,8 +51,22 @@ def index(sql):
 	if res:
 		#CLIENT PAGE
 		sql.execute('select nick from user where id=?;', (res[1],))
-		res = sql.fetchone()
-		return opt.main('Hello ' + res[0])
+		ret = pages.header.format(sql.fetchone()[0])
+		
+		list = ''
+		sql.execute('select name,who,whom,done from full_task where who_id=?;', (res[1], ))
+		for i in sql.fetchall():
+			if i[3] == 0:
+				ico = '<img src=\'/static/ico/quest.svg\' width=32 height=32>'
+			else:
+				ico = '<img src=\'/static/ico/done.svg\' width=32 height=32>'
+			list += '<tr>'\
+			'<td>{}</td>'\
+			'<td>{}</td>'\
+			'<td>{}</td>'\
+			'<td>{}</td>'\
+			'</tr>'.format(i[0],i[1],i[2],ico)
+		return opt.main(ret+pages.whom.format(list))
 			
 	#LOGIN PAGE
 	err = ('Немає такого користувача', 'Неправильний пароль')

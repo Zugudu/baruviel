@@ -27,3 +27,22 @@ login = '''
 error = '''
 <div class="w3-container w3-red w3-padding">{}</div>
 '''
+
+whom = '''
+<table class='w3-container w3-card w3-margin w3-table w3-bordered' style='width:800px;'>
+<tr>
+<td>Назва завдання</td>
+<td>Хто призначив</td>
+<td>Кому призначив</td>
+<td>Стан</td>
+</tr>
+{}
+</table>
+'''
+
+header = '''
+<div class='w3-bar w3-blue'>
+<div class='w3-bar-item'>Привіт {}</div>
+<a href=/exit><div class='w3-bar-item w3-hover-red'>Вийти</div></a>
+</div>
+'''
