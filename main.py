@@ -10,7 +10,7 @@ from hashlib import sha3_256 as sha3
 db = sqlite3.connect('db')
 
 
-def db_work(func):
+def sql(func):
 	def wrap(*a, **ka):
 		cursor = db.cursor()
 		ret = func(*a, sql=cursor, **ka)
@@ -19,17 +19,26 @@ def db_work(func):
 	return wrap
 	
 	
-@route('/static/<file:path>')
-def load_static(file):
-	return static_file(file, 'static')
+def login(func):
+	def wrap(*a, **ka):
+		session = get_session(request)
+		if session:
+			return func(*a, session=session, **ka)
+		redirect('/')
+	return wrap
 
 
 def hash(text):
 	return sha3(str(text).encode('utf-8')).hexdigest()
 	
+	
+@route('/static/<file:path>')
+def load_static(file):
+	return static_file(file, 'static')
+	
 
-@db_work
-def test_login(request, sql):
+@sql
+def get_session(request, sql):
 	"""
 	return session data or None
 	"""
@@ -42,31 +51,40 @@ def test_login(request, sql):
 			if ip == res[2] and agent == res[3] and request.get_cookie('auth') == res[4]:
 				return res
 	return None
+	
+	
+@sql
+def get_header(session, sql):
+	sql.execute('select nick from user where id=?;', (session[1],))
+	return pages.header.format(sql.fetchone()[0], session[1])
+	
+	
+def get_task_table(tasks):
+	list = ''
+	for i in tasks:
+		if i[3] == 0:
+			ico = '<img src=\'/static/ico/quest.svg\' width=32 height=32>'
+		else:
+			ico = '<img src=\'/static/ico/done.svg\' width=32 height=32>'
+		list += '<tr>'\
+		'<td>{}</td>'\
+		'<td>{}</td>'\
+		'<td>{}</td>'\
+		'<td>{}</td>'\
+		'<td>{}</td>'\
+		'<td>{}</td>'\
+		'</tr>'.format(i[0], i[1], i[2], ico, i[6], i[7])
+	return pages.task_table.format(list)
 
 
 @route('/')
-@db_work
+@sql
 def index(sql):
-	res = test_login(request)
-	if res:
+	session = get_session(request)
+	if session:
 		#CLIENT PAGE
-		sql.execute('select nick from user where id=?;', (res[1],))
-		ret = pages.header.format(sql.fetchone()[0])
-		
-		list = ''
-		sql.execute('select name,who,whom,done from full_task where who_id=?;', (res[1], ))
-		for i in sql.fetchall():
-			if i[3] == 0:
-				ico = '<img src=\'/static/ico/quest.svg\' width=32 height=32>'
-			else:
-				ico = '<img src=\'/static/ico/done.svg\' width=32 height=32>'
-			list += '<tr>'\
-			'<td>{}</td>'\
-			'<td>{}</td>'\
-			'<td>{}</td>'\
-			'<td>{}</td>'\
-			'</tr>'.format(i[0],i[1],i[2],ico)
-		return opt.main(ret+pages.whom.format(list))
+		sql.execute('select * from full_task;')
+		return opt.main(get_task_table(sql.fetchall()), get_header(session))
 			
 	#LOGIN PAGE
 	err = ('Немає такого користувача', 'Неправильний пароль')
@@ -79,7 +97,7 @@ def index(sql):
 	return opt.main(pages.login)
 
 @post('/')
-@db_work
+@sql
 def p_index(sql):
 	sql.execute('SELECT pass from user where id=?;', (request.forms.get('login'),))
 	res = sql.fetchone()
@@ -100,15 +118,29 @@ def p_index(sql):
 	redirect('/')
 	
 	
+@route('/task/<which>/<id:int>')
+@sql
+@login
+def task_my(which, id, sql, session):
+	if which in ('who', 'whom'):
+		sql.execute('select * from full_task where ' + which + '_id=?;', (id,))
+		return opt.main(pages.give_task_btn + get_task_table(sql.fetchall()), get_header(session))
+		
+		
+@route('/task/give')
+@login
+def task_my(session):
+	return opt.main(pages.give_task.format(''), get_header(session))
+	
+	
 @route('/exit')
-@db_work
-def route(sql):
-	res = test_login(request)
-	if res:
-		response.set_cookie('auth', '')
-		response.set_cookie('id_auth', '')
-		sql.execute('delete from session where id=?;', (res[0],))
-		db.commit()
+@sql
+@login
+def route(sql, session):
+	response.set_cookie('auth', '')
+	response.set_cookie('id_auth', '')
+	sql.execute('delete from session where id=?;', (session[0],))
+	db.commit()
 	redirect('/')
 
 

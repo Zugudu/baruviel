@@ -28,21 +28,46 @@ error = '''
 <div class="w3-container w3-red w3-padding">{}</div>
 '''
 
-whom = '''
-<table class='w3-container w3-card w3-margin w3-table w3-bordered' style='width:800px;'>
+task_table = '''
+<table class='w3-container w3-card w3-table w3-bordered' style='width:800px;'>
 <tr>
 <td>Назва завдання</td>
 <td>Хто призначив</td>
 <td>Кому призначив</td>
 <td>Стан</td>
+<td>Початок</td>
+<td>Кінець</td>
 </tr>
 {}
 </table>
 '''
 
+
+give_task = '''
+<form method=POST class='w3-container w3-card w3-padding w3-margin' style='width:300px;'>
+<label>Назва завдання*</label>
+<input name='name' type='text' placeholder='Назва завдання' class='w3-input'>
+<label>Кому*</label>
+<select class='w3-select' name='whom'>
+{}
+</select>
+<label>Дата початку</label>
+<input name='start' type='date' class='w3-input'>
+<label>Дата кінця</label>
+<input name='end' type='date' class='w3-input'>
+<button class='w3-btn w3-black w3-block w3-margin-top' type='submit'>Доручити</button>
+</form>
+'''
+
+
+give_task_btn = "<a href='/task/give' class='w3-button w3-blue w3-hover-red w3-margin-bottom' style='width:300px;'>Доручити завдання</a>"
+
+
 header = '''
-<div class='w3-bar w3-blue'>
-<div class='w3-bar-item'>Привіт {}</div>
-<a href=/exit><div class='w3-bar-item w3-hover-red'>Вийти</div></a>
+<div class='w3-bar w3-blue w3-margin-bottom'>
+<a href='/'><div class='w3-bar-item w3-hover-red'>Привіт {0}</div></a>
+<a href='/task/whom/{1}'><div class='w3-bar-item w3-hover-red'>Отримані завдання</div></a>
+<a href='/task/who/{1}'><div class='w3-bar-item w3-hover-red'>Доручені завдання</div></a>
+<a href='/exit'><div class='w3-bar-item w3-hover-red'>Вийти</div></a>
 </div>
 '''
