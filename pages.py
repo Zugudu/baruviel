@@ -30,7 +30,7 @@ error = '''
 
 task_table = '''
 <table class='w3-container w3-card w3-table w3-bordered' style='width:800px;'>
-<tr>
+<tr class='w3-pale-yellow'>
 <td>Назва завдання</td>
 <td>Хто призначив</td>
 <td>Кому призначив</td>

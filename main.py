@@ -54,9 +54,17 @@ def get_session(request, sql):
 	
 	
 @sql
-def get_header(session, sql):
+def get_header(session, request, sql):
+	err = ('Введіть всі дані із зірочкою',)
+	err_mes = ''
+	try:
+		err_num = int(request.query.err)
+		if err_num >= 0 and err_num < len(err):
+			err_mes = pages.error.format(err[err_num])
+	except ValueError:
+		pass
 	sql.execute('select nick from user where id=?;', (session[1],))
-	return pages.header.format(sql.fetchone()[0], session[1])
+	return err_mes + pages.header.format(sql.fetchone()[0], session[1])
 	
 	
 def get_task_table(tasks):
@@ -84,14 +92,14 @@ def index(sql):
 	if session:
 		#CLIENT PAGE
 		sql.execute('select * from full_task;')
-		return opt.main(get_task_table(sql.fetchall()), get_header(session))
+		return opt.main(get_task_table(sql.fetchall()), get_header(session, request))
 			
 	#LOGIN PAGE
 	err = ('Немає такого користувача', 'Неправильний пароль')
 	try:
 		err_num = int(request.query.err)
 		if err_num >= 0 and err_num < len(err):
-			return opt.err(err[err_num], pages.login)
+			return opt.main(pages.error.format(err[err_num])+pages.login)
 	except ValueError:
 		pass
 	return opt.main(pages.login)
@@ -121,16 +129,41 @@ def p_index(sql):
 @route('/task/<which>/<id:int>')
 @sql
 @login
-def task_my(which, id, sql, session):
+def g_task_my(which, id, sql, session):
 	if which in ('who', 'whom'):
 		sql.execute('select * from full_task where ' + which + '_id=?;', (id,))
-		return opt.main(pages.give_task_btn + get_task_table(sql.fetchall()), get_header(session))
+		return opt.main(pages.give_task_btn + get_task_table(sql.fetchall()), get_header(session, request))
+	redirect('/')
 		
 		
 @route('/task/give')
+@sql
 @login
-def task_my(session):
-	return opt.main(pages.give_task.format(''), get_header(session))
+def g_task_give(sql, session):
+	sql.execute('select id, nick from user;')
+	user_list = ''
+	for i in sql.fetchall():
+		user_list += '<option value={}>{}</option>'.format(i[0], i[1])
+	return opt.main(pages.give_task.format(user_list), get_header(session, request))
+	
+	
+@post('/task/give')
+@sql
+@login
+def p_task_give(sql, session):
+	name = request.forms.name
+	whom = request.forms.get('whom')
+	if name and whom:
+		sql.execute('insert into task values(null, ?, ?, ?, 0, ?, ?);', (
+			name,
+			session[1],
+			whom,
+			request.forms.get('start'),
+			request.forms.get('end')))
+		db.commit()
+		redirect('/')
+	else:
+		redirect('/task/give?err=0')
 	
 	
 @route('/exit')
