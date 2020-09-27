@@ -95,7 +95,7 @@ def index(sql):
 	session = get_session(request)
 	if session:
 		#CLIENT PAGE
-		sql.execute('select * from full_task;')
+		sql.execute('select * from full_task ;')
 		return opt.main(get_task_table(sql.fetchall()), get_header(session, request))
 			
 	#LOGIN PAGE
