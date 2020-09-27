@@ -37,6 +37,7 @@ task_table = '''
 <td>Стан</td>
 <td>Початок</td>
 <td>Кінець</td>
+<td></td>
 </tr>
 {}
 </table>
@@ -61,6 +62,37 @@ give_task = '''
 
 
 give_task_btn = "<a href='/task/give' class='w3-button w3-blue w3-hover-red w3-margin-bottom' style='width:300px;'>Доручити завдання</a>"
+done_task_btn = "<a href='/done/{}' class='w3-button w3-blue w3-hover-red w3-margin-top' style='width:300px;'>{}</a>"
+
+
+task_info = '''
+<table class='w3-container w3-card w3-table w3-bordered' style='width:800px;'>
+<tr>
+<td colspan=2 class='w3-center'><h3>{}</h3></td>
+</tr>
+<tr>
+<td>Доручив</td>
+<td>{}</td>
+</tr>
+<tr>
+<td>Виконувач</td>
+<td>{}</td>
+</tr>
+<tr>
+<td>Статус</td>
+<td>{}</td>
+</tr>
+<tr>
+<td>Дата початку</td>
+<td>{}</td>
+</tr>
+<tr>
+<td>Дата кінця</td>
+<td>{}</td>
+</tr>
+</table>
+{}
+'''
 
 
 header = '''

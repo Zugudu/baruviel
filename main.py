@@ -32,6 +32,13 @@ def hash(text):
 	return sha3(str(text).encode('utf-8')).hexdigest()
 	
 	
+def get_ico(status):
+	if status == 0:
+		return '<img src=\'/static/ico/quest.svg\' width=32 height=32>'
+	else:
+		return '<img src=\'/static/ico/done.svg\' width=32 height=32>'
+	
+	
 @route('/static/<file:path>')
 def load_static(file):
 	return static_file(file, 'static')
@@ -70,10 +77,6 @@ def get_header(session, request, sql):
 def get_task_table(tasks):
 	list = ''
 	for i in tasks:
-		if i[3] == 0:
-			ico = '<img src=\'/static/ico/quest.svg\' width=32 height=32>'
-		else:
-			ico = '<img src=\'/static/ico/done.svg\' width=32 height=32>'
 		list += '<tr>'\
 		'<td>{}</td>'\
 		'<td>{}</td>'\
@@ -81,7 +84,8 @@ def get_task_table(tasks):
 		'<td>{}</td>'\
 		'<td>{}</td>'\
 		'<td>{}</td>'\
-		'</tr>'.format(i[0], i[1], i[2], ico, i[6], i[7])
+		'<td><a href=\'/task/{}\' class=\'w3-button w3-hover-blue\'>Більше</a></td>'\
+		'</tr>'.format(i[0], i[1], i[2], get_ico(i[3]), i[6], i[7], i[8])
 	return pages.task_table.format(list)
 
 
@@ -166,10 +170,45 @@ def p_task_give(sql, session):
 		redirect('/task/give?err=0')
 	
 	
+@route('/done/<id:int>')
+@sql
+@login
+def task_done(id, sql, session):
+	sql.execute('select * from full_task where id=?;', (id, ))
+	task = sql.fetchone()
+	if task[4] == session[1] or task[5] == session[1]:
+		if task[3] == 0:
+			status = 1
+		else:
+			status = 0
+		sql.execute('update task set done=? where id=?;', (status, id))
+		db.commit()
+		redirect('/task/'+str(id))
+	else:
+		redirect('/')
+		
+		
+@route('/task/<id:int>')
+@sql
+@login
+def task_info(id, sql, session):
+	sql.execute('select * from full_task where id=?;', (id, ))
+	task = sql.fetchone()
+	if task[4] == session[1] or task[5] == session[1]:
+		if task[3] == 0:
+			status = 'Виконати завдання'
+		else:
+			status = 'Передумати'
+		btn = pages.done_task_btn.format(id, status)
+	else:
+		btn = ''
+	return opt.main(pages.task_info.format(task[0], task[1], task[2], get_ico(task[3]), task[6], task[7], btn), get_header(session, request))
+	
+	
 @route('/exit')
 @sql
 @login
-def route(sql, session):
+def exit(sql, session):
 	response.set_cookie('auth', '')
 	response.set_cookie('id_auth', '')
 	sql.execute('delete from session where id=?;', (session[0],))
