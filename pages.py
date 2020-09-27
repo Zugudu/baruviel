@@ -62,7 +62,8 @@ give_task = '''
 
 
 give_task_btn = "<a href='/task/give' class='w3-button w3-blue w3-hover-red w3-margin-bottom' style='width:300px;'>Доручити завдання</a>"
-done_task_btn = "<a href='/done/{}' class='w3-button w3-blue w3-hover-red w3-margin-top' style='width:300px;'>{}</a>"
+done_task_btn = "<a href='/task/done/{}' class='w3-button w3-block w3-blue w3-hover-red w3-margin-top' style='width:300px;'>{}</a>"
+remove_task_btn = "<a href='/task/remove/{}' class='w3-button w3-block w3-blue w3-hover-red w3-margin-top' style='width:300px;'>Видалити завдання</a>"
 
 
 task_info = '''
@@ -98,8 +99,8 @@ task_info = '''
 header = '''
 <div class='w3-bar w3-blue w3-margin-bottom'>
 <a href='/'><div class='w3-bar-item w3-hover-red'>Привіт {0}</div></a>
-<a href='/task/whom/{1}'><div class='w3-bar-item w3-hover-red'>Отримані завдання</div></a>
-<a href='/task/who/{1}'><div class='w3-bar-item w3-hover-red'>Доручені завдання</div></a>
+<a href='/task/list/whom/{1}'><div class='w3-bar-item w3-hover-red'>Отримані завдання</div></a>
+<a href='/task/list/who/{1}'><div class='w3-bar-item w3-hover-red'>Доручені завдання</div></a>
 <a href='/exit'><div class='w3-bar-item w3-hover-red'>Вийти</div></a>
 </div>
 '''

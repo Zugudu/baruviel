@@ -130,7 +130,7 @@ def p_index(sql):
 	redirect('/')
 	
 	
-@route('/task/<which>/<id:int>')
+@route('/task/list/<which>/<id:int>')
 @sql
 @login
 def g_task_my(which, id, sql, session):
@@ -170,7 +170,7 @@ def p_task_give(sql, session):
 		redirect('/task/give?err=0')
 	
 	
-@route('/done/<id:int>')
+@route('/task/done/<id:int>')
 @sql
 @login
 def task_done(id, sql, session):
@@ -188,6 +188,18 @@ def task_done(id, sql, session):
 		redirect('/')
 		
 		
+@route('/task/remove/<id:int>')
+@sql
+@login
+def task_remove(id, sql, session):
+	sql.execute('select who from task where id=?;', (id, ))
+	task = sql.fetchone()
+	if task[0] == session[1]:
+		sql.execute('delete from task where id=?;', (id, ))
+		db.commit()
+	redirect('/')
+		
+		
 @route('/task/<id:int>')
 @sql
 @login
@@ -200,6 +212,9 @@ def task_info(id, sql, session):
 		else:
 			status = 'Передумати'
 		btn = pages.done_task_btn.format(id, status)
+		
+		if task[4] == session[1]:
+			btn += pages.remove_task_btn.format(id)
 	else:
 		btn = ''
 	return opt.main(pages.task_info.format(task[0], task[1], task[2], get_ico(task[3]), task[6], task[7], btn), get_header(session, request))
