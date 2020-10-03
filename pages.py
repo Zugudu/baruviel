@@ -47,16 +47,16 @@ task_table = '''
 give_task = '''
 <form method=POST class='w3-container w3-card w3-padding w3-margin' style='width:300px;'>
 <label>Назва завдання*</label>
-<input name='name' type='text' placeholder='Назва завдання' class='w3-input'>
+<input name='name' type='text' placeholder='Назва завдання' class='w3-input' value='{}'>
 <label>Кому*</label>
 <select class='w3-select' name='whom'>
 {}
 </select>
 <label>Дата початку</label>
-<input name='start' type='date' class='w3-input'>
+<input name='start' type='date' class='w3-input' value='{}'>
 <label>Дата кінця</label>
-<input name='end' type='date' class='w3-input'>
-<button class='w3-btn w3-black w3-block w3-margin-top' type='submit'>Доручити</button>
+<input name='end' type='date' class='w3-input' value='{}'>
+<button class='w3-btn w3-black w3-block w3-margin-top' type='submit'>{}</button>
 </form>
 '''
 

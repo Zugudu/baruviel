@@ -17,8 +17,8 @@ def sql(func):
 		cursor.close()
 		return ret
 	return wrap
-	
-	
+
+
 def login(func):
 	def wrap(*a, **ka):
 		session = get_session(request)
@@ -30,19 +30,19 @@ def login(func):
 
 def hash(text):
 	return sha3(str(text).encode('utf-8')).hexdigest()
-	
-	
+
+
 def get_ico(status):
 	if status == 0:
 		return '<img src=\'/static/ico/quest.svg\' width=32 height=32>'
 	else:
 		return '<img src=\'/static/ico/done.svg\' width=32 height=32>'
-	
-	
+
+
 @route('/static/<file:path>')
 def load_static(file):
 	return static_file(file, 'static')
-	
+
 
 @sql
 def get_session(request, sql):
@@ -58,11 +58,11 @@ def get_session(request, sql):
 			if ip == res[2] and agent == res[3] and request.get_cookie('auth') == res[4]:
 				return res
 	return None
-	
-	
+
+
 @sql
 def get_header(session, request, sql):
-	err = ('Введіть всі дані із зірочкою',)
+	err = ('Введіть всі дані із зірочкою', 'Ви не маєте права на це')
 	err_mes = ''
 	try:
 		err_num = int(request.query.err)
@@ -72,8 +72,8 @@ def get_header(session, request, sql):
 		pass
 	sql.execute('select nick from user where id=?;', (session[1],))
 	return err_mes + pages.header.format(sql.fetchone()[0], session[1])
-	
-	
+
+
 def get_task_table(tasks):
 	list = ''
 	for i in tasks:
@@ -97,7 +97,7 @@ def index(sql):
 		#CLIENT PAGE
 		sql.execute('select * from full_task ;')
 		return opt.main(get_task_table(sql.fetchall()), get_header(session, request))
-			
+
 	#LOGIN PAGE
 	err = ('Немає такого користувача', 'Неправильний пароль')
 	try:
@@ -128,8 +128,8 @@ def p_index(sql):
 		else:
 			redirect('/?err=1')
 	redirect('/')
-	
-	
+
+
 @route('/task/list/<which>/<id:int>')
 @sql
 @login
@@ -138,8 +138,8 @@ def g_task_my(which, id, sql, session):
 		sql.execute('select * from full_task where ' + which + '_id=?;', (id,))
 		return opt.main(pages.give_task_btn + get_task_table(sql.fetchall()), get_header(session, request))
 	redirect('/')
-		
-		
+
+
 @route('/task/give')
 @sql
 @login
@@ -148,9 +148,9 @@ def g_task_give(sql, session):
 	user_list = ''
 	for i in sql.fetchall():
 		user_list += '<option value={}>{}</option>'.format(i[0], i[1])
-	return opt.main(pages.give_task.format(user_list), get_header(session, request))
-	
-	
+	return opt.main(pages.give_task.format('', user_list, '', '', 'Доручити'), get_header(session, request))
+
+
 @post('/task/give')
 @sql
 @login
@@ -168,8 +168,8 @@ def p_task_give(sql, session):
 		redirect('/')
 	else:
 		redirect('/task/give?err=0')
-	
-	
+
+
 @route('/task/done/<id:int>')
 @sql
 @login
@@ -186,8 +186,8 @@ def task_done(id, sql, session):
 		redirect('/task/'+str(id))
 	else:
 		redirect('/')
-		
-		
+
+
 @route('/task/remove/<id:int>')
 @sql
 @login
@@ -198,8 +198,50 @@ def task_remove(id, sql, session):
 		sql.execute('delete from task where id=?;', (id, ))
 		db.commit()
 	redirect('/')
-		
-		
+
+
+@route('/task/edit/<id:int>')
+@sql
+@login
+def task_edit(id, sql, session):
+	sql.execute('select who, whom, name, start, end from task where id=?;', (id, ))
+	task = sql.fetchone()
+	if task[0] == session[1]:
+		sql.execute('select id, nick from user;')
+		user_list = ''
+		for i in sql.fetchall():
+			if task[1] == i[0]:
+				user_list += '<option value={} selected>{}</option>'.format(i[0], i[1])
+			else:
+				user_list += '<option value={}>{}</option>'.format(i[0], i[1])
+		return opt.main(pages.give_task.format(task[2], user_list, task[3], task[4], 'Змінити'), get_header(session, request))
+	else:
+		redirect('/')
+
+
+@post('/task/edit/<id:int>')
+@sql
+@login
+def p_task_give(id, sql, session):
+	sql.execute('select who from task where id=?;', (id, ))
+	task = sql.fetchone()
+	if task[0] == session[1]:
+		name = request.forms.name
+		whom = request.forms.get('whom')
+		if name and whom:
+			sql.execute('update task set name=?, whom=?, start=?, end=?;', (
+				name,
+				whom,
+				request.forms.get('start'),
+				request.forms.get('end')))
+			db.commit()
+			redirect('/task/' + str(id))
+		else:
+			redirect('/task/edit/' + str(id) + '?err=0')
+	else:
+		redirect('/task/edit/' + str(id) + '?err=1')
+
+
 @route('/task/<id:int>')
 @sql
 @login
@@ -212,14 +254,14 @@ def task_info(id, sql, session):
 		else:
 			status = 'Передумати'
 		btn = pages.done_task_btn.format(id, status)
-		
+
 		if task[4] == session[1]:
 			btn += pages.remove_task_btn.format(id)
 	else:
 		btn = ''
 	return opt.main(pages.task_info.format(task[0], task[1], task[2], get_ico(task[3]), task[6], task[7], btn), get_header(session, request))
-	
-	
+
+
 @route('/exit')
 @sql
 @login
@@ -241,7 +283,7 @@ if __name__ == '__main__':
 		CONF = ('wsgiref', '127.0.0.1', '80', False, True)
 		with open('conf.csv', 'w', newline='') as fd:
 			csv.writer(fd).writerow(CONF)
-			
+
 	print('RL: {} QT: {}'.format(CONF[4], CONF[3]))
 	if CONF[0] == 'gevent':
 		from gevent import monkey; monkey.patch_all()
