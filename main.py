@@ -222,18 +222,19 @@ def task_edit(id, sql, session):
 @post('/task/edit/<id:int>')
 @sql
 @login
-def p_task_give(id, sql, session):
+def p_task_edit(id, sql, session):
 	sql.execute('select who from task where id=?;', (id, ))
 	task = sql.fetchone()
 	if task[0] == session[1]:
 		name = request.forms.name
 		whom = request.forms.get('whom')
 		if name and whom:
-			sql.execute('update task set name=?, whom=?, start=?, end=?;', (
+			sql.execute('update task set name=?, whom=?, start=?, end=? where id=?;', (
 				name,
 				whom,
 				request.forms.get('start'),
-				request.forms.get('end')))
+				request.forms.get('end'),
+				id))
 			db.commit()
 			redirect('/task/' + str(id))
 		else:
@@ -256,6 +257,7 @@ def task_info(id, sql, session):
 		btn = pages.done_task_btn.format(id, status)
 
 		if task[4] == session[1]:
+			btn += pages.edit_task_btn.format(id)
 			btn += pages.remove_task_btn.format(id)
 	else:
 		btn = ''
