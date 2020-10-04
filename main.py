@@ -123,8 +123,8 @@ def p_index(sql):
 			sql.execute('insert into session values(null, ?, ?, ?, ?);', (request.forms.get('login'), ip, agent, _hash))
 			db.commit()
 			sql.execute('select id from session where id_user=? and ip=? and agent=?;', (request.forms.get('login'), ip, agent))
-			response.set_cookie('auth', _hash)
-			response.set_cookie('id_auth', str(sql.fetchone()[0]))
+			response.set_cookie('auth', _hash, max_age=432000)
+			response.set_cookie('id_auth', str(sql.fetchone()[0]), max_age=432000)
 		else:
 			redirect('/?err=1')
 	redirect('/')
