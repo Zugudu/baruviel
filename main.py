@@ -3,6 +3,7 @@ import sqlite3
 import csv
 import opt
 import pages
+from os import path
 from bottle import route, run, static_file, abort, post, request, redirect, error, response
 from hashlib import sha3_256 as sha3
 
@@ -71,7 +72,12 @@ def get_header(session, request, sql):
 	except ValueError:
 		pass
 	sql.execute('select nick from user where id=?;', (session[1],))
-	return err_mes + pages.header.format(sql.fetchone()[0], session[1])
+	#return err_mes + pages.header.format(sql.fetchone()[0], session[1])
+	#A VERY BAD IMPLEMENTATION DOWN
+	if session[1] in (1, 2, 3):
+		return err_mes + pages.header.format(sql.fetchone()[0], session[1], '<a href=\'/stat\'><div class=\'w3-bar-item w3-hover-red\'>Статистика сайту</div></a>')
+	else:
+		return err_mes + pages.header.format(sql.fetchone()[0], session[1], '')
 
 
 def get_task_table(tasks):
@@ -273,6 +279,31 @@ def exit(sql, session):
 	sql.execute('delete from session where id=?;', (session[0],))
 	db.commit()
 	redirect('/')
+
+
+@route('/stat')
+@login
+def statistic(session):
+	if session[1] in (1, 2, 3):
+		ret = ['', '']
+		row = '<tr><td>{}</td><td>{} ({})</td></tr>'
+		bad = '<span class=\'w3-text-red\'>{}</span>'
+		good = '<span class=\'w3-text-green\'>+{}</span>'
+		for i in range(2):
+			last = 0
+			with open(path.join('.', 'log/', str(i)), 'r') as fd:
+				for r in fd:
+					r = r.replace('\n', '').split('\t')
+					delta = int(r[1]) - last
+					last = int(r[1])
+					if delta < 0:
+						delta = bad.format(delta)
+					else:
+						delta = good.format(delta)
+					ret[i] += row.format(r[0], r[1], delta)
+		return opt.main(pages.stat.format(ret[0], ret[1]), get_header(session, request))
+	else:
+		redirect('/')
 
 
 if __name__ == '__main__':

@@ -103,6 +103,23 @@ header = '''
 <a href='/'><div class='w3-bar-item w3-hover-red'>Привіт {0}</div></a>
 <a href='/task/list/whom/{1}'><div class='w3-bar-item w3-hover-red'>Отримані завдання</div></a>
 <a href='/task/list/who/{1}'><div class='w3-bar-item w3-hover-red'>Доручені завдання</div></a>
+{2}
 <a href='/exit'><div class='w3-bar-item w3-hover-red'>Вийти</div></a>
+</div>
+'''
+
+
+stat = '''
+<div class='w3-row' style='width:600px;'>
+<table class='w3-table w3-bordered w3-border w3-container w3-half w3-centered w3-striped'>
+<tr>
+<td colspan=2>UHENTAI</td>
+</tr>{}
+</table>
+<table class='w3-table w3-bordered w3-border w3-container w3-half w3-centered w3-striped'>
+<tr>
+<td colspan=2>UMANGA</td>
+</tr>{}
+</table>
 </div>
 '''
