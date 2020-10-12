@@ -9,6 +9,7 @@ from hashlib import sha3_256 as sha3
 
 
 db = sqlite3.connect('db')
+db.execute('pragma foreign_keys = 1')
 
 
 def sql(func):
@@ -80,19 +81,34 @@ def get_header(session, request, sql):
 		return err_mes + pages.header.format(sql.fetchone()[0], session[1], '')
 
 
-def get_task_table(tasks):
+@sql
+def get_subtask_table(title, tasks, sql):
 	list = ''
 	for i in tasks:
 		list += '<tr>'\
-		'<td>{}</td>'\
-		'<td>{}</td>'\
-		'<td>{}</td>'\
-		'<td>{}</td>'\
-		'<td>{}</td>'\
-		'<td>{}</td>'\
-		'<td><a href=\'/task/{}\' class=\'w3-button w3-hover-blue\'>Більше</a></td>'\
-		'</tr>'.format(i[0], i[1], i[2], get_ico(i[3]), i[6], i[7], i[8])
-	return pages.task_table.format(list)
+		'<td class="w3-border-right">{}</td>'\
+		'<td class="w3-border-right">{}</td>'\
+		'<td class="w3-border-right">{}</td>'\
+		'<td class="w3-border-right">{}</td>'\
+		'<td><a href="/subtask/{}" class="w3-button w3-black w3-hover-light-gray w3-block">Більше</a></td>'\
+		'</tr>'.format(i[8], i[1], i[2], get_ico(i[4]), i[0])
+	return pages.subtask_list.format(title, list)
+
+
+@sql
+def get_task_table(title, tasks, sql):
+	list = ''
+	for i in tasks:
+		list += '<tr>'\
+		'<td class="w3-border-right">{}</td>'\
+		'<td class="w3-border-right">{}</td>'\
+		'<td class="w3-border-right">{}</td>'\
+		'<td><a href="/task/{}" class="w3-button w3-black w3-hover-light-gray w3-block">Більше</a></td>'\
+		'</tr>'.format(i[1], i[2], get_ico(not sql.execute('select count(*) from v_done where id_task=?;', (i[0],)).fetchone()[0]), i[0])
+	return pages.task_info.format(title, list)
+
+
+### ROUTES ###
 
 
 @route('/')
@@ -101,8 +117,8 @@ def index(sql):
 	session = get_session(request)
 	if session:
 		#CLIENT PAGE
-		sql.execute('select * from full_task ;')
-		return opt.main(get_task_table(sql.fetchall()), get_header(session, request))
+		sql.execute('select * from v_task ;')
+		return opt.main(get_task_table('Останні завдання', sql.fetchall()), get_header(session, request))
 
 	#LOGIN PAGE
 	err = ('Немає такого користувача', 'Неправильний пароль')
@@ -113,6 +129,7 @@ def index(sql):
 	except ValueError:
 		pass
 	return opt.main(pages.login)
+
 
 @post('/')
 @sql
@@ -136,60 +153,74 @@ def p_index(sql):
 	redirect('/')
 
 
-@route('/task/list/<which>/<id:int>')
+@route('/task/<id:int>')
 @sql
 @login
-def g_task_my(which, id, sql, session):
-	if which in ('who', 'whom'):
-		sql.execute('select * from full_task where ' + which + '_id=?;', (id,))
-		return opt.main(pages.give_task_btn + get_task_table(sql.fetchall()), get_header(session, request))
-	redirect('/')
-
-
-@route('/task/give')
-@sql
-@login
-def g_task_give(sql, session):
-	sql.execute('select id, nick from user;')
-	user_list = ''
-	for i in sql.fetchall():
-		user_list += '<option value={}>{}</option>'.format(i[0], i[1])
-	return opt.main(pages.give_task.format('', user_list, '', '', 'Доручити'), get_header(session, request))
-
-
-@post('/task/give')
-@sql
-@login
-def p_task_give(sql, session):
-	name = request.forms.name
-	whom = request.forms.get('whom')
-	if name and whom:
-		sql.execute('insert into task values(null, ?, ?, ?, 0, ?, ?);', (
-			name,
-			session[1],
-			whom,
-			request.forms.get('start'),
-			request.forms.get('end')))
-		db.commit()
-		redirect('/')
+def task_info(id, sql, session):
+	sql.execute('select * from v_subtask where id_task=?;', (id, ))
+	tasks = sql.fetchall()
+	sql.execute('select name, who from task where id=?;', (id,))
+	task = sql.fetchone()
+	sql.execute('select who from task where id=?;', (id,))
+	table = ''
+	if sql.fetchone()[0] == session[1]:
+		table = pages.give_task_btn.format('sub')
+	table += get_subtask_table(task[0], tasks)
+	if session[1] == task[1]:
+		btn=pages.edit_task_btn.format('', id)
+		btn+=pages.remove_task_btn.format(id)
 	else:
-		redirect('/task/give?err=0')
+		btn=''
+	return opt.main(table+btn, get_header(session, request))
+
+
+@route('/subtask/<id:int>')
+@sql
+@login
+def task_info(id, sql, session):
+	sql.execute('select * from v_subtask where id=?;', (id, ))
+	task = sql.fetchone()
+	if task[7] == session[1] or task[6] == session[1]:
+		if task[4] == 0:
+			status = 'Виконати завдання'
+		else:
+			status = 'Передумати'
+		btn = pages.done_task_btn.format(id, status)
+
+		if task[6] == session[1]:
+			btn += pages.edit_task_btn.format('sub', id)
+	else:
+		btn = ''
+	return opt.main(pages.subtask_info.format(task[1], task[3], task[2], get_ico(task[4]), btn), get_header(session, request))
+
+
+@route('/task/list/who/<id:int>')
+@sql
+@login
+def g_task_my(id, sql, session):
+	sql.execute('select * from v_task where uid=?;', (id,))
+	return opt.main(pages.give_task_btn.format('') + get_task_table('Створені мною завдання', sql.fetchall(),), get_header(session, request))
+
+
+@route('/task/list/whom/<id:int>')
+@sql
+@login
+def g_task_my(id, sql, session):
+	sql.execute('select * from v_subtask where whom=?;', (id,))
+	return opt.main(get_subtask_table('Доручені мені завдання', sql.fetchall()), get_header(session, request))
 
 
 @route('/task/done/<id:int>')
 @sql
 @login
 def task_done(id, sql, session):
-	sql.execute('select * from full_task where id=?;', (id, ))
+	sql.execute('select * from v_subtask where id=?;', (id, ))
 	task = sql.fetchone()
-	if task[4] == session[1] or task[5] == session[1]:
-		if task[3] == 0:
-			status = 1
-		else:
-			status = 0
-		sql.execute('update task set done=? where id=?;', (status, id))
+	if task[6] == session[1] or task[7] == session[1]:
+		status = not task[4]
+		sql.execute('update subtask set done=? where id=?;', (status, id))
 		db.commit()
-		redirect('/task/'+str(id))
+		redirect('/subtask/'+str(id))
 	else:
 		redirect('/')
 
@@ -206,21 +237,67 @@ def task_remove(id, sql, session):
 	redirect('/')
 
 
+@route('/subtask/edit/<id:int>')
+@sql
+@login
+def subtask_edit(id, sql, session):
+	sql.execute('select name, whom, id_task from subtask where id=?;', (id, ))
+	task = sql.fetchone()
+	sql.execute('select who from task where id=?;', (task[2],))
+	if sql.fetchone()[0] == session[1]:
+		user_list = ''
+		task_list = ''
+		sql.execute('select id, nick from user;')
+		for i in sql.fetchall():
+			if i[0] == task[1]:
+				frmt = '<option value={} selected>{}</option>'
+			else:
+				frmt = '<option value={}>{}</option>'
+			user_list += frmt.format(i[0], i[1])
+		sql.execute('select id, name from task;')
+		for i in sql.fetchall():
+			if i[0] == task[2]:
+				frmt = '<option value={} selected>{}</option>'
+			else:
+				frmt = '<option value={}>{}</option>'
+			task_list += frmt.format(i[0], i[1])
+		return opt.main(pages.give_subtask.format(task[0], user_list, task_list, 'Доручити'), get_header(session, request))
+	else:
+		redirect('/')
+
+
+@post('/subtask/edit/<id:int>')
+@sql
+@login
+def p_subtask_edit(id, sql, session):
+	sql.execute('select who from v_subtask where id=?;', (id, ))
+	task = sql.fetchone()
+	if task[0] == session[1]:
+		name = request.forms.name
+		whom = request.forms.get('whom')
+		task = request.forms.get('task')
+		if name and whom and task:
+			sql.execute('update subtask set name=?, whom=?, id_task=? where id=?;', (
+				name,
+				whom,
+				task,
+				id))
+			db.commit()
+			redirect('/subtask/' + str(id))
+		else:
+			redirect('/subtask/edit/' + str(id) + '?err=0')
+	else:
+		redirect('/subtask/edit/' + str(id) + '?err=1')
+
+
 @route('/task/edit/<id:int>')
 @sql
 @login
 def task_edit(id, sql, session):
-	sql.execute('select who, whom, name, start, end from task where id=?;', (id, ))
+	sql.execute('select name, who from task where id=?;', (id, ))
 	task = sql.fetchone()
-	if task[0] == session[1]:
-		sql.execute('select id, nick from user;')
-		user_list = ''
-		for i in sql.fetchall():
-			if task[1] == i[0]:
-				user_list += '<option value={} selected>{}</option>'.format(i[0], i[1])
-			else:
-				user_list += '<option value={}>{}</option>'.format(i[0], i[1])
-		return opt.main(pages.give_task.format(task[2], user_list, task[3], task[4], 'Змінити'), get_header(session, request))
+	if task[1] == session[1]:
+		return opt.main(pages.give_task.format(task[0], 'Доручити'), get_header(session, request))
 	else:
 		redirect('/')
 
@@ -233,13 +310,9 @@ def p_task_edit(id, sql, session):
 	task = sql.fetchone()
 	if task[0] == session[1]:
 		name = request.forms.name
-		whom = request.forms.get('whom')
-		if name and whom:
-			sql.execute('update task set name=?, whom=?, start=?, end=? where id=?;', (
+		if name:
+			sql.execute('update task set name=? where id=?;', (
 				name,
-				whom,
-				request.forms.get('start'),
-				request.forms.get('end'),
 				id))
 			db.commit()
 			redirect('/task/' + str(id))
@@ -249,25 +322,63 @@ def p_task_edit(id, sql, session):
 		redirect('/task/edit/' + str(id) + '?err=1')
 
 
-@route('/task/<id:int>')
+@route('/subtask/give')
 @sql
 @login
-def task_info(id, sql, session):
-	sql.execute('select * from full_task where id=?;', (id, ))
-	task = sql.fetchone()
-	if task[4] == session[1] or task[5] == session[1]:
-		if task[3] == 0:
-			status = 'Виконати завдання'
-		else:
-			status = 'Передумати'
-		btn = pages.done_task_btn.format(id, status)
+def g_subtask_give(sql, session):
+	user_list = ''
+	task_list = ''
+	sql.execute('select id, nick from user;')
+	for i in sql.fetchall():
+		user_list += '<option value={}>{}</option>'.format(i[0], i[1])
+	sql.execute('select id, name from task;')
+	for i in sql.fetchall():
+		task_list += '<option value={}>{}</option>'.format(i[0], i[1])
+	return opt.main(pages.give_subtask.format('', user_list, task_list, 'Доручити'), get_header(session, request))
 
-		if task[4] == session[1]:
-			btn += pages.edit_task_btn.format(id)
-			btn += pages.remove_task_btn.format(id)
+
+@post('/subtask/give')
+@sql
+@login
+def p_subtask_give(sql, session):
+	name = request.forms.name
+	whom = request.forms.get('whom')
+	task = request.forms.get('task')
+	sql.execute('select who from task where id=?;', (task,))
+	if sql.fetchone()[0] == session[1]:
+		if name and whom:
+			sql.execute('insert into subtask values(null, ?, ?, 0, ?);', (
+				name,
+				whom,
+				task))
+			db.commit()
+			redirect('/')
+		else:
+			redirect('/subtask/give?err=0')
 	else:
-		btn = ''
-	return opt.main(pages.task_info.format(task[0], task[1], task[2], get_ico(task[3]), task[6], task[7], btn), get_header(session, request))
+		redirect('/')
+
+
+@route('/task/give')
+@sql
+@login
+def g_task_give(sql, session):
+	return opt.main(pages.give_task.format('', 'Створити завдання'), get_header(session, request))
+
+
+@post('/task/give')
+@sql
+@login
+def p_task_give(sql, session):
+	name = request.forms.name
+	if name:
+		sql.execute('insert into task values(null, ?, ?);', (
+			name,
+			session[1]))
+		db.commit()
+		redirect('/')
+	else:
+		redirect('/task/give?err=0')
 
 
 @route('/exit')
