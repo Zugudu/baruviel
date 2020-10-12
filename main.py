@@ -161,13 +161,17 @@ def task_info(id, sql, session):
 	tasks = sql.fetchall()
 	sql.execute('select name, who from task where id=?;', (id,))
 	task = sql.fetchone()
-	table = get_subtask_table(task[0], tasks)
+	sql.execute('select who from task where id=?;', (id,))
+	table = ''
+	if sql.fetchone()[0] == session[1]:
+		table = pages.give_task_btn.format('sub')
+	table += get_subtask_table(task[0], tasks)
 	if session[1] == task[1]:
 		btn=pages.edit_task_btn.format('', id)
 		btn+=pages.remove_task_btn.format(id)
 	else:
 		btn=''
-	return opt.main(pages.give_task_btn.format('sub') + table+btn, get_header(session, request))
+	return opt.main(table+btn, get_header(session, request))
 
 
 @route('/subtask/<id:int>')
@@ -340,15 +344,19 @@ def p_subtask_give(sql, session):
 	name = request.forms.name
 	whom = request.forms.get('whom')
 	task = request.forms.get('task')
-	if name and whom:
-		sql.execute('insert into subtask values(null, ?, ?, 0, ?);', (
-			name,
-			whom,
-			task))
-		db.commit()
-		redirect('/')
+	sql.execute('select who from task where id=?;', (task,))
+	if sql.fetchone()[0] == session[1]:
+		if name and whom:
+			sql.execute('insert into subtask values(null, ?, ?, 0, ?);', (
+				name,
+				whom,
+				task))
+			db.commit()
+			redirect('/')
+		else:
+			redirect('/subtask/give?err=0')
 	else:
-		redirect('/subtask/give?err=0')
+		redirect('/')
 
 
 @route('/task/give')
