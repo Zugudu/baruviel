@@ -30,7 +30,7 @@ error = '''
 '''
 
 
-give_task = '''
+give_subtask = '''
 <form method=POST class='w3-container w3-card w3-padding w3-margin' style='width:300px;'>
 <label>Назва завдання*</label>
 <input name='name' type='text' placeholder='Назва завдання' class='w3-input' value='{}'>
@@ -38,16 +38,24 @@ give_task = '''
 <select class='w3-select' name='whom'>
 {}
 </select>
-<label>Дата початку</label>
-<input name='start' type='date' class='w3-input' value='{}'>
-<label>Дата кінця</label>
-<input name='end' type='date' class='w3-input' value='{}'>
+<label>До завдання*</label>
+<select class='w3-select' name='task'>
+{}
+</select>
+<button class='w3-btn w3-black w3-block w3-margin-top' type='submit'>{}</button>
+</form>
+'''
+
+give_task = '''
+<form method=POST class='w3-container w3-card w3-padding w3-margin' style='width:300px;'>
+<label>Назва завдання*</label>
+<input name='name' type='text' placeholder='Назва завдання' class='w3-input' value='{}'>
 <button class='w3-btn w3-black w3-block w3-margin-top' type='submit'>{}</button>
 </form>
 '''
 
 
-give_task_btn = "<a href='/task/give' class='w3-button w3-blue w3-hover-red w3-margin-bottom' style='width:300px;'>Доручити завдання</a>"
+give_task_btn = "<a href='/{}task/give' class='w3-button w3-blue w3-hover-red w3-margin-bottom' style='width:300px;'>Доручити завдання</a>"
 done_task_btn = "<a href='/task/done/{}' class='w3-button w3-block w3-blue w3-hover-red w3-margin-top' style='width:300px;'>{}</a>"
 remove_task_btn = "<a href='/task/remove/{}' class='w3-button w3-block w3-blue w3-hover-red w3-margin-top' style='width:300px;'>Видалити завдання</a>"
 edit_task_btn = "<a href='/task/edit/{}' class='w3-button w3-block w3-blue w3-hover-red w3-margin-top' style='width:300px;'>Змінити завдання</a>"

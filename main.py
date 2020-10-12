@@ -165,7 +165,7 @@ def task_info(id, sql, session):
 		btn=pages.remove_task_btn.format(id)
 	else:
 		btn=''
-	return opt.main(table+btn, get_header(session, request))#OK
+	return opt.main(pages.give_task_btn.format('sub') + table+btn, get_header(session, request))#OK
 
 
 @route('/subtask/<id:int>')
@@ -193,7 +193,7 @@ def task_info(id, sql, session):
 @login
 def g_task_my(id, sql, session):
 	sql.execute('select * from v_task where uid=?;', (id,))
-	return opt.main(pages.give_task_btn + get_task_table('Доручені мною завдання', sql.fetchall(),), get_header(session, request))
+	return opt.main(pages.give_task_btn.format('') + get_task_table('Створені мною завдання', sql.fetchall(),), get_header(session, request))
 	
 	
 @route('/task/list/whom/<id:int>')
@@ -201,7 +201,7 @@ def g_task_my(id, sql, session):
 @login
 def g_task_my(id, sql, session):
 	sql.execute('select * from v_subtask where whom=?;', (id,))
-	return opt.main(pages.give_task_btn + get_subtask_table('Доручені мені завдання', sql.fetchall()), get_header(session, request))
+	return opt.main(get_subtask_table('Доручені мені завдання', sql.fetchall()), get_header(session, request))
 
 
 @route('/task/done/<id:int>')
@@ -274,30 +274,55 @@ def p_task_edit(id, sql, session):
 		redirect('/task/edit/' + str(id) + '?err=1')
 
 
+@route('/subtask/give')
+@sql
+@login
+def g_subtask_give(sql, session):
+	user_list = ''
+	task_list = ''
+	sql.execute('select id, nick from user;')
+	for i in sql.fetchall():
+		user_list += '<option value={}>{}</option>'.format(i[0], i[1])
+	sql.execute('select id, name from task;')
+	for i in sql.fetchall():
+		task_list += '<option value={}>{}</option>'.format(i[0], i[1])
+	return opt.main(pages.give_subtask.format('', user_list, task_list, 'Доручити'), get_header(session, request))
+
+
+@post('/subtask/give')
+@sql
+@login
+def p_subtask_give(sql, session):
+	name = request.forms.name
+	whom = request.forms.get('whom')
+	task = request.forms.get('task')
+	if name and whom:
+		sql.execute('insert into subtask values(null, ?, ?, 0, ?);', (
+			name,
+			whom,
+			task))
+		db.commit()
+		redirect('/')
+	else:
+		redirect('/subtask/give?err=0')
+		
+		
 @route('/task/give')
 @sql
 @login
 def g_task_give(sql, session):
-	sql.execute('select id, nick from user;')
-	user_list = ''
-	for i in sql.fetchall():
-		user_list += '<option value={}>{}</option>'.format(i[0], i[1])
-	return opt.main(pages.give_task.format('', user_list, '', '', 'Доручити'), get_header(session, request))
-
-
+	return opt.main(pages.give_task.format('', 'Створити завдання'), get_header(session, request))
+	
+	
 @post('/task/give')
 @sql
 @login
 def p_task_give(sql, session):
 	name = request.forms.name
-	whom = request.forms.get('whom')
-	if name and whom:
-		sql.execute('insert into task values(null, ?, ?, ?, 0, ?, ?);', (
+	if name:
+		sql.execute('insert into task values(null, ?, ?);', (
 			name,
-			session[1],
-			whom,
-			request.forms.get('start'),
-			request.forms.get('end')))
+			session[1]))
 		db.commit()
 		redirect('/')
 	else:
