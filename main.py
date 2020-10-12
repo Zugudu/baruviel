@@ -82,18 +82,34 @@ def get_header(session, request, sql):
 
 
 @sql
-def get_task_table(title, tasks, url, sql):
+def get_subtask_table(title, tasks, sql):
 	list = ''
 	for i in tasks:
 		list += '<tr>'\
 		'<td class="w3-border-right">{}</td>'\
 		'<td class="w3-border-right">{}</td>'\
 		'<td class="w3-border-right">{}</td>'\
-		'<td><a href="/{}/{}" class="w3-button w3-black w3-hover-light-gray w3-block">Більше</a></td>'\
-		'</tr>'.format(i[1], i[2], get_ico(not sql.execute('select count(*) from v_done where id_task=?;', (i[0],)).fetchone()[0]), url, i[0])
+		'<td class="w3-border-right">{}</td>'\
+		'<td><a href="/subtask/{}" class="w3-button w3-black w3-hover-light-gray w3-block">Більше</a></td>'\
+		'</tr>'.format(i[8], i[1], i[2], get_ico(i[4]), i[0])
+	return pages.subtask_list.format(title, list)
+
+
+@sql
+def get_task_table(title, tasks, sql):
+	list = ''
+	for i in tasks:
+		list += '<tr>'\
+		'<td class="w3-border-right">{}</td>'\
+		'<td class="w3-border-right">{}</td>'\
+		'<td class="w3-border-right">{}</td>'\
+		'<td><a href="/task/{}" class="w3-button w3-black w3-hover-light-gray w3-block">Більше</a></td>'\
+		'</tr>'.format(i[1], i[2], get_ico(not sql.execute('select count(*) from v_done where id_task=?;', (i[0],)).fetchone()[0]), i[0])
 	return pages.task_info.format(title, list)
 
+
 ### ROUTES ###
+
 
 @route('/')
 @sql
@@ -102,7 +118,7 @@ def index(sql):
 	if session:
 		#CLIENT PAGE
 		sql.execute('select * from v_task ;')
-		return opt.main(get_task_table('Останні завдання', sql.fetchall(), 'task'), get_header(session, request))
+		return opt.main(get_task_table('Останні завдання', sql.fetchall()), get_header(session, request))
 
 	#LOGIN PAGE
 	err = ('Немає такого користувача', 'Неправильний пароль')
@@ -140,16 +156,16 @@ def p_index(sql):
 @sql
 @login
 def task_info(id, sql, session):
-	sql.execute('select * from v_taskinfo where id_task=?;', (id, ))
+	sql.execute('select * from v_subtask where id_task=?;', (id, ))
 	tasks = sql.fetchall()
 	sql.execute('select name, who from task where id=?;', (id,))
 	task = sql.fetchone()
-	table = get_task_table(task[0], tasks, 'subtask')
+	table = get_subtask_table(task[0], tasks)
 	if session[1] == task[1]:
 		btn=pages.remove_task_btn.format(id)
 	else:
 		btn=''
-	return opt.main(table+btn, get_header(session, request))
+	return opt.main(table+btn, get_header(session, request))#OK
 
 
 @route('/subtask/<id:int>')
@@ -170,20 +186,22 @@ def task_info(id, sql, session):
 	else:
 		btn = ''
 	return opt.main(pages.subtask_info.format(task[1], task[3], task[2], get_ico(task[4]), btn), get_header(session, request))#OK
-
-
-@route('/task/list/<which>/<id:int>')
+	
+	
+@route('/task/list/who/<id:int>')
 @sql
 @login
-def g_task_my(which, id, sql, session):
-	if which == 'who':
-		title = 'Доручені мною завдання'
-	elif which == 'whom':
-		title = 'Доручені мені завдання'
-	else:
-		redirect('/')
-	sql.execute('select * from full_task where ' + which + '_id=?;', (id,))
-	return opt.main(pages.give_task_btn + get_task_table(title, sql.fetchall(), 'task'), get_header(session, request))
+def g_task_my(id, sql, session):
+	sql.execute('select * from v_task where uid=?;', (id,))
+	return opt.main(pages.give_task_btn + get_task_table('Доручені мною завдання', sql.fetchall(),), get_header(session, request))
+	
+	
+@route('/task/list/whom/<id:int>')
+@sql
+@login
+def g_task_my(id, sql, session):
+	sql.execute('select * from v_subtask where whom=?;', (id,))
+	return opt.main(pages.give_task_btn + get_subtask_table('Доручені мені завдання', sql.fetchall()), get_header(session, request))
 
 
 @route('/task/done/<id:int>')

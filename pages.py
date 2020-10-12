@@ -74,13 +74,14 @@ subtask_info = '''
 {}
 '''
 
-task_info = '''
+_task_info = '''
 <table class='w3-container w3-card w3-table w3-bordered' style='width:800px;'>
 <tr>
-<td colspan=4 class='w3-center'><h3>{}</h3></td>
+<td colspan={} class='w3-center'><h3>{}</h3></td>
 </tr>
 <tr class='w3-pale-yellow'>
-<td class='w3-border-right'><h4>Завдання</h4></td>
+{}
+<td class='w3-border-right'><h4>{}</h4></td>
 <td class='w3-border-right'><h4>Відповідальний</h4></td>
 <td class='w3-border-right'><h4>Стан</h4></td>
 <td></td>
@@ -88,6 +89,9 @@ task_info = '''
 {}
 </table>
 '''
+
+task_info = _task_info.format(4, '{}', '', 'Завдання', '{}')
+subtask_list = _task_info.format(5, '{}', '<td class="w3-border-right"><h4>Завдання</h4></td>' , 'Підзавдання', '{}')
 
 
 header = '''
