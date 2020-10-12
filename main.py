@@ -128,7 +128,8 @@ def index(sql):
 			return opt.main(pages.error.format(err[err_num])+pages.login)
 	except ValueError:
 		pass
-	return opt.main(pages.login)#OK
+	return opt.main(pages.login)
+
 
 @post('/')
 @sql
@@ -149,7 +150,7 @@ def p_index(sql):
 			response.set_cookie('id_auth', str(sql.fetchone()[0]), max_age=432000)
 		else:
 			redirect('/?err=1')
-	redirect('/')#OK
+	redirect('/')
 
 
 @route('/task/<id:int>')
@@ -166,7 +167,7 @@ def task_info(id, sql, session):
 		btn+=pages.remove_task_btn.format(id)
 	else:
 		btn=''
-	return opt.main(pages.give_task_btn.format('sub') + table+btn, get_header(session, request))#OK
+	return opt.main(pages.give_task_btn.format('sub') + table+btn, get_header(session, request))
 
 
 @route('/subtask/<id:int>')
@@ -186,17 +187,17 @@ def task_info(id, sql, session):
 			btn += pages.edit_task_btn.format('sub', id)
 	else:
 		btn = ''
-	return opt.main(pages.subtask_info.format(task[1], task[3], task[2], get_ico(task[4]), btn), get_header(session, request))#OK
-	
-	
+	return opt.main(pages.subtask_info.format(task[1], task[3], task[2], get_ico(task[4]), btn), get_header(session, request))
+
+
 @route('/task/list/who/<id:int>')
 @sql
 @login
 def g_task_my(id, sql, session):
 	sql.execute('select * from v_task where uid=?;', (id,))
 	return opt.main(pages.give_task_btn.format('') + get_task_table('Створені мною завдання', sql.fetchall(),), get_header(session, request))
-	
-	
+
+
 @route('/task/list/whom/<id:int>')
 @sql
 @login
@@ -217,7 +218,7 @@ def task_done(id, sql, session):
 		db.commit()
 		redirect('/subtask/'+str(id))
 	else:
-		redirect('/')#OK
+		redirect('/')
 
 
 @route('/task/remove/<id:int>')
@@ -229,7 +230,7 @@ def task_remove(id, sql, session):
 	if task[0] == session[1]:
 		sql.execute('delete from task where id=?;', (id, ))
 		db.commit()
-	redirect('/')#OK
+	redirect('/')
 
 
 @route('/subtask/edit/<id:int>')
@@ -283,8 +284,8 @@ def p_subtask_edit(id, sql, session):
 			redirect('/subtask/edit/' + str(id) + '?err=0')
 	else:
 		redirect('/subtask/edit/' + str(id) + '?err=1')
-		
-		
+
+
 @route('/task/edit/<id:int>')
 @sql
 @login
@@ -348,15 +349,15 @@ def p_subtask_give(sql, session):
 		redirect('/')
 	else:
 		redirect('/subtask/give?err=0')
-		
-		
+
+
 @route('/task/give')
 @sql
 @login
 def g_task_give(sql, session):
 	return opt.main(pages.give_task.format('', 'Створити завдання'), get_header(session, request))
-	
-	
+
+
 @post('/task/give')
 @sql
 @login
