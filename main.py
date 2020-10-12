@@ -162,7 +162,8 @@ def task_info(id, sql, session):
 	task = sql.fetchone()
 	table = get_subtask_table(task[0], tasks)
 	if session[1] == task[1]:
-		btn=pages.remove_task_btn.format(id)
+		btn=pages.edit_task_btn.format('', id)
+		btn+=pages.remove_task_btn.format(id)
 	else:
 		btn=''
 	return opt.main(pages.give_task_btn.format('sub') + table+btn, get_header(session, request))#OK
@@ -182,7 +183,7 @@ def task_info(id, sql, session):
 		btn = pages.done_task_btn.format(id, status)
 
 		if task[6] == session[1]:
-			btn += pages.edit_task_btn.format(id)
+			btn += pages.edit_task_btn.format('sub', id)
 	else:
 		btn = ''
 	return opt.main(pages.subtask_info.format(task[1], task[3], task[2], get_ico(task[4]), btn), get_header(session, request))#OK
@@ -231,21 +232,67 @@ def task_remove(id, sql, session):
 	redirect('/')#OK
 
 
+@route('/subtask/edit/<id:int>')
+@sql
+@login
+def subtask_edit(id, sql, session):
+	sql.execute('select name, whom, id_task from subtask where id=?;', (id, ))
+	task = sql.fetchone()
+	sql.execute('select who from task where id=?;', (task[2],))
+	if sql.fetchone()[0] == session[1]:
+		user_list = ''
+		task_list = ''
+		sql.execute('select id, nick from user;')
+		for i in sql.fetchall():
+			if i[0] == task[1]:
+				frmt = '<option value={} selected>{}</option>'
+			else:
+				frmt = '<option value={}>{}</option>'
+			user_list += frmt.format(i[0], i[1])
+		sql.execute('select id, name from task;')
+		for i in sql.fetchall():
+			if i[0] == task[2]:
+				frmt = '<option value={} selected>{}</option>'
+			else:
+				frmt = '<option value={}>{}</option>'
+			task_list += frmt.format(i[0], i[1])
+		return opt.main(pages.give_subtask.format(task[0], user_list, task_list, 'Доручити'), get_header(session, request))
+	else:
+		redirect('/')
+
+
+@post('/subtask/edit/<id:int>')
+@sql
+@login
+def p_subtask_edit(id, sql, session):
+	sql.execute('select who from v_subtask where id=?;', (id, ))
+	task = sql.fetchone()
+	if task[0] == session[1]:
+		name = request.forms.name
+		whom = request.forms.get('whom')
+		task = request.forms.get('task')
+		if name and whom and task:
+			sql.execute('update subtask set name=?, whom=?, id_task=? where id=?;', (
+				name,
+				whom,
+				task,
+				id))
+			db.commit()
+			redirect('/subtask/' + str(id))
+		else:
+			redirect('/subtask/edit/' + str(id) + '?err=0')
+	else:
+		redirect('/subtask/edit/' + str(id) + '?err=1')
+		
+		
 @route('/task/edit/<id:int>')
 @sql
 @login
 def task_edit(id, sql, session):
-	sql.execute('select who, whom, name, start, end from task where id=?;', (id, ))
+	sql.execute('select name, who from task where id=?;', (id, ))
 	task = sql.fetchone()
-	if task[0] == session[1]:
-		sql.execute('select id, nick from user;')
-		user_list = ''
-		for i in sql.fetchall():
-			if task[1] == i[0]:
-				user_list += '<option value={} selected>{}</option>'.format(i[0], i[1])
-			else:
-				user_list += '<option value={}>{}</option>'.format(i[0], i[1])
-		return opt.main(pages.give_task.format(task[2], user_list, task[3], task[4], 'Змінити'), get_header(session, request))
+	if task[1] == session[1]:
+		return opt.main(pages.give_task.format(task[0], 'Доручити'), get_header(session, request))
 	else:
 		redirect('/')
 
@@ -258,13 +305,9 @@ def p_task_edit(id, sql, session):
 	task = sql.fetchone()
 	if task[0] == session[1]:
 		name = request.forms.name
-		whom = request.forms.get('whom')
-		if name and whom:
-			sql.execute('update task set name=?, whom=?, start=?, end=? where id=?;', (
+		if name:
+			sql.execute('update task set name=? where id=?;', (
 				name,
-				whom,
-				request.forms.get('start'),
-				request.forms.get('end'),
 				id))
 			db.commit()
 			redirect('/task/' + str(id))
