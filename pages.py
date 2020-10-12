@@ -29,21 +29,6 @@ error = '''
 <div class="w3-container w3-red w3-padding">{}</div>
 '''
 
-task_table = '''
-<table class='w3-container w3-card w3-table w3-bordered' style='width:800px;'>
-<tr class='w3-pale-yellow'>
-<td>Назва завдання</td>
-<td>Хто призначив</td>
-<td>Кому призначив</td>
-<td>Стан</td>
-<td>Початок</td>
-<td>Кінець</td>
-<td></td>
-</tr>
-{}
-</table>
-'''
-
 
 give_task = '''
 <form method=POST class='w3-container w3-card w3-padding w3-margin' style='width:300px;'>
@@ -68,7 +53,7 @@ remove_task_btn = "<a href='/task/remove/{}' class='w3-button w3-block w3-blue w
 edit_task_btn = "<a href='/task/edit/{}' class='w3-button w3-block w3-blue w3-hover-red w3-margin-top' style='width:300px;'>Змінити завдання</a>"
 
 
-task_info = '''
+subtask_info = '''
 <table class='w3-container w3-card w3-table w3-bordered' style='width:800px;'>
 <tr>
 <td colspan=2 class='w3-center'><h3>{}</h3></td>
@@ -82,19 +67,26 @@ task_info = '''
 <td>{}</td>
 </tr>
 <tr>
-<td>Статус</td>
-<td>{}</td>
-</tr>
-<tr>
-<td>Дата початку</td>
-<td>{}</td>
-</tr>
-<tr>
-<td>Дата кінця</td>
+<td>Стан</td>
 <td>{}</td>
 </tr>
 </table>
 {}
+'''
+
+task_info = '''
+<table class='w3-container w3-card w3-table w3-bordered' style='width:800px;'>
+<tr>
+<td colspan=4 class='w3-center'><h3>{}</h3></td>
+</tr>
+<tr class='w3-pale-yellow'>
+<td class='w3-border-right'><h4>Завдання</h4></td>
+<td class='w3-border-right'><h4>Відповідальний</h4></td>
+<td class='w3-border-right'><h4>Стан</h4></td>
+<td></td>
+</tr>
+{}
+</table>
 '''
 
 
