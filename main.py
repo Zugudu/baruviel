@@ -214,7 +214,7 @@ def task_info(id, sql, session):
 @login
 def g_task_my(id, sql, session):
 	sql.execute('select * from v_task where uid=?;', (id,))
-	return opt.main(pages.give_task_btn.format('') + get_task_table('Створені мною завдання', sql.fetchall(),), get_header(session, request))
+	return opt.main(pages.give_task_btn.format('', id) + get_task_table('Створені мною завдання', sql.fetchall()), get_header(session, request))
 
 
 @route('/task/list/whom/<id:int>')
