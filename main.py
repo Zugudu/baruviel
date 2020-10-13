@@ -425,7 +425,10 @@ def statistic(session):
 		for i in range(2):
 			last = 0
 			with open(path.join('.', 'log/', str(i)), 'r') as fd:
-				for r in fd:
+				data = fd.read().split('\n')
+				data.remove('')
+				data.reverse()
+				for r in data:
 					r = r.replace('\n', '').split('\t')
 					delta = int(r[1]) - last
 					last = int(r[1])
