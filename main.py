@@ -198,7 +198,7 @@ def task_info(id, sql, session):
 	table = ''
 	edit_flag = False
 	if sql.fetchone()[0] == session[1]:
-		table = pages.give_task_btn.format('sub')
+		table = pages.give_task_btn.format('sub', '?id='+str(id))
 		edit_flag = True
 	table += get_subtask_table(task[0], tasks, session, edit_flag)
 	if session[1] == task[1]:
@@ -341,6 +341,10 @@ def p_task_edit(id, sql, session):
 @sql
 @login
 def g_subtask_give(sql, session):
+	try:
+		task_id = int(request.query.id)
+	except ValueError:
+		task_id = 0
 	user_list = ''
 	task_list = ''
 	sql.execute('select id, nick from user;')
@@ -348,7 +352,10 @@ def g_subtask_give(sql, session):
 		user_list += '<option value={}>{}</option>'.format(i[0], i[1])
 	sql.execute('select id, name from task;')
 	for i in sql.fetchall():
-		task_list += '<option value={}>{}</option>'.format(i[0], i[1])
+		if i[0] == task_id:
+			task_list += '<option value={} selected>{}</option>'.format(i[0], i[1])
+		else:
+			task_list += '<option value={}>{}</option>'.format(i[0], i[1])
 	return opt.main(pages.give_subtask.format('', user_list, task_list, 'Доручити'), get_header(session, request))
 
 

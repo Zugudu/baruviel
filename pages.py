@@ -55,7 +55,7 @@ give_task = '''
 '''
 
 
-give_task_btn = "<a href='/{}task/give' class='w3-button w3-blue w3-hover-red w3-margin-bottom' style='width:300px;'>Доручити завдання</a>"
+give_task_btn = "<a href='/{}task/give{}' class='w3-button w3-blue w3-hover-red w3-margin-bottom' style='width:300px;'>Доручити завдання</a>"
 done_task_btn = "<a href='/task/done/{}' class='w3-button w3-block w3-blue w3-hover-red w3-margin-top' style='width:300px;'>{}</a>"
 done_task_btn_short = "<a href='/task/done/{}' class='w3-button w3-block w3-blue w3-hover-red'>{}</a>"
 remove_task_btn = "<a href='/task/remove/{}' class='w3-button w3-block w3-blue w3-hover-red w3-margin-top' style='width:300px;'>Видалити завдання</a>"
