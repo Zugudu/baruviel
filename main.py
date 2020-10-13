@@ -424,10 +424,10 @@ def statistic(session):
 		good = '<span class=\'w3-text-green\'>+{}</span>'
 		for i in range(2):
 			last = 0
+			list = []
 			with open(path.join('.', 'log/', str(i)), 'r') as fd:
 				data = fd.read().split('\n')
 				data.remove('')
-				data.reverse()
 				for r in data:
 					r = r.replace('\n', '').split('\t')
 					delta = int(r[1]) - last
@@ -436,7 +436,11 @@ def statistic(session):
 						delta = bad.format(delta)
 					else:
 						delta = good.format(delta)
-					ret[i] += row.format(r[0], r[1], delta)
+					list.append(row.format(r[0], r[1], delta))
+			list.reverse()
+			for el in list:
+				ret[i] += el
+				
 		return opt.main(pages.stat.format(ret[0], ret[1]), get_header(session, request))
 	else:
 		redirect('/')
