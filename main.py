@@ -41,6 +41,13 @@ def get_ico(status):
 		return '<img src=\'/static/ico/done.svg\' width=32 height=32>'
 
 
+def get_done_btn(status):
+	if status:
+		return 'Передумати'
+	else:
+		return 'Виконати'
+
+
 @route('/static/<file:path>')
 def load_static(file):
 	return static_file(file, 'static')
@@ -82,17 +89,43 @@ def get_header(session, request, sql):
 
 
 @sql
-def get_subtask_table(title, tasks, sql):
+def get_subtask_table(title, tasks, session, edit_flag, sql):
 	list = ''
+	col_number = 5
+	table_expand = ''
+	
+	if edit_flag:
+		col_number = 6
+		table_expand = '<td></td>'
+		list_template = '<tr>'\
+			'<td class="w3-border-right">{}</td>'\
+			'<td class="w3-border-right">{}</td>'\
+			'<td class="w3-border-right">{}</td>'\
+			'<td class="w3-border-right">{}</td>'\
+			'<td class="w3-border-right">{}</td>'\
+			'<td>{}</td>'\
+			'</tr>'
+	else:
+		list_template = '<tr>'\
+			'<td class="w3-border-right">{}</td>'\
+			'<td class="w3-border-right">{}</td>'\
+			'<td class="w3-border-right">{}</td>'\
+			'<td class="w3-border-right">{}</td>'\
+			'<td>{}</td>'\
+			'</tr>'
+	
 	for i in tasks:
-		list += '<tr>'\
-		'<td class="w3-border-right">{}</td>'\
-		'<td class="w3-border-right">{}</td>'\
-		'<td class="w3-border-right">{}</td>'\
-		'<td class="w3-border-right">{}</td>'\
-		'<td><a href="/subtask/{}" class="w3-button w3-black w3-hover-light-gray w3-block">Більше</a></td>'\
-		'</tr>'.format(i[8], i[1], i[2], get_ico(i[4]), i[0])
-	return pages.subtask_list.format(title, list)
+		if edit_flag:
+			list += list_template.format(i[8], i[1], i[2], get_ico(i[4]),
+				pages.done_task_btn_short.format(i[0], get_done_btn(i[4])),
+				pages.edit_task_btn_short.format('sub', i[0]))
+		else:
+			if i[7] == session[1]:
+				list += list_template.format(i[8], i[1], i[2], get_ico(i[4]),
+					pages.done_task_btn_short.format(i[0], get_done_btn(i[4])))
+			else:
+				list += list_template.format(i[8], i[1], i[2], get_ico(i[4]), '')
+	return pages.subtask_list.format(col_number, title, table_expand, list)
 
 
 @sql
@@ -163,35 +196,17 @@ def task_info(id, sql, session):
 	task = sql.fetchone()
 	sql.execute('select who from task where id=?;', (id,))
 	table = ''
+	edit_flag = False
 	if sql.fetchone()[0] == session[1]:
 		table = pages.give_task_btn.format('sub')
-	table += get_subtask_table(task[0], tasks)
+		edit_flag = True
+	table += get_subtask_table(task[0], tasks, session, edit_flag)
 	if session[1] == task[1]:
 		btn=pages.edit_task_btn.format('', id)
 		btn+=pages.remove_task_btn.format(id)
 	else:
 		btn=''
 	return opt.main(table+btn, get_header(session, request))
-
-
-@route('/subtask/<id:int>')
-@sql
-@login
-def task_info(id, sql, session):
-	sql.execute('select * from v_subtask where id=?;', (id, ))
-	task = sql.fetchone()
-	if task[7] == session[1] or task[6] == session[1]:
-		if task[4] == 0:
-			status = 'Виконати завдання'
-		else:
-			status = 'Передумати'
-		btn = pages.done_task_btn.format(id, status)
-
-		if task[6] == session[1]:
-			btn += pages.edit_task_btn.format('sub', id)
-	else:
-		btn = ''
-	return opt.main(pages.subtask_info.format(task[1], task[3], task[2], get_ico(task[4]), btn), get_header(session, request))
 
 
 @route('/task/list/who/<id:int>')
@@ -207,7 +222,7 @@ def g_task_my(id, sql, session):
 @login
 def g_task_my(id, sql, session):
 	sql.execute('select * from v_subtask where whom=?;', (id,))
-	return opt.main(get_subtask_table('Доручені мені завдання', sql.fetchall()), get_header(session, request))
+	return opt.main(get_subtask_table('Доручені мені завдання', sql.fetchall(), session, False), get_header(session, request))
 
 
 @route('/task/done/<id:int>')
@@ -220,7 +235,7 @@ def task_done(id, sql, session):
 		status = not task[4]
 		sql.execute('update subtask set done=? where id=?;', (status, id))
 		db.commit()
-		redirect('/subtask/'+str(id))
+		redirect('/task/'+str(task[5]))
 	else:
 		redirect('/')
 
@@ -270,7 +285,7 @@ def subtask_edit(id, sql, session):
 @sql
 @login
 def p_subtask_edit(id, sql, session):
-	sql.execute('select who from v_subtask where id=?;', (id, ))
+	sql.execute('select who, id_task from v_subtask where id=?;', (id, ))
 	task = sql.fetchone()
 	if task[0] == session[1]:
 		name = request.forms.name
@@ -283,7 +298,7 @@ def p_subtask_edit(id, sql, session):
 				task,
 				id))
 			db.commit()
-			redirect('/subtask/' + str(id))
+			redirect('/task/' + str(task))
 		else:
 			redirect('/subtask/edit/' + str(id) + '?err=0')
 	else:
@@ -352,7 +367,7 @@ def p_subtask_give(sql, session):
 				whom,
 				task))
 			db.commit()
-			redirect('/')
+			redirect('/task/'+task)
 		else:
 			redirect('/subtask/give?err=0')
 	else:

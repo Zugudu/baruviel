@@ -57,30 +57,11 @@ give_task = '''
 
 give_task_btn = "<a href='/{}task/give' class='w3-button w3-blue w3-hover-red w3-margin-bottom' style='width:300px;'>Доручити завдання</a>"
 done_task_btn = "<a href='/task/done/{}' class='w3-button w3-block w3-blue w3-hover-red w3-margin-top' style='width:300px;'>{}</a>"
+done_task_btn_short = "<a href='/task/done/{}' class='w3-button w3-block w3-blue w3-hover-red'>{}</a>"
 remove_task_btn = "<a href='/task/remove/{}' class='w3-button w3-block w3-blue w3-hover-red w3-margin-top' style='width:300px;'>Видалити завдання</a>"
 edit_task_btn = "<a href='/{}task/edit/{}' class='w3-button w3-block w3-blue w3-hover-red w3-margin-top' style='width:300px;'>Змінити завдання</a>"
+edit_task_btn_short = "<a href='/{}task/edit/{}' class='w3-button w3-block w3-blue w3-hover-red'>Змінити</a>"
 
-
-subtask_info = '''
-<table class='w3-container w3-card w3-table w3-bordered' style='width:800px;'>
-<tr>
-<td colspan=2 class='w3-center'><h3>{}</h3></td>
-</tr>
-<tr>
-<td>Доручив</td>
-<td>{}</td>
-</tr>
-<tr>
-<td>Виконувач</td>
-<td>{}</td>
-</tr>
-<tr>
-<td>Стан</td>
-<td>{}</td>
-</tr>
-</table>
-{}
-'''
 
 _task_info = '''
 <table class='w3-container w3-card w3-table w3-bordered' style='width:800px;'>
@@ -92,14 +73,14 @@ _task_info = '''
 <td class='w3-border-right'><h4>{}</h4></td>
 <td class='w3-border-right'><h4>Відповідальний</h4></td>
 <td class='w3-border-right'><h4>Стан</h4></td>
-<td></td>
+<td class='w3-border-right'></td>{}
 </tr>
 {}
 </table>
 '''
 
-task_info = _task_info.format(4, '{}', '', 'Завдання', '{}')
-subtask_list = _task_info.format(5, '{}', '<td class="w3-border-right"><h4>Завдання</h4></td>' , 'Підзавдання', '{}')
+task_info = _task_info.format(4, '{}', '', 'Завдання', '', '{}')
+subtask_list = _task_info.format('{}', '{}', '<td class="w3-border-right"><h4>Завдання</h4></td>' , 'Підзавдання', '{}', '{}')
 
 
 header = '''
