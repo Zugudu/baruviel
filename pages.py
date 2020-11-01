@@ -5,6 +5,7 @@ main = '''
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" type="image/png" href="/static/ico/logo.png">
 <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link rel="stylesheet" href="/static/css/chart.css">
 <title>Барувіель</title>
 </head>
 <body>
@@ -108,3 +109,21 @@ stat = '''
 </table>
 </div>
 '''
+
+
+stat_c = '''
+UHENTAI<br>
+{}<br>
+UMANGA<br>
+{}<br>
+'''
+
+stat_chart = '''
+<div class="chart wrap">
+	<div class=num>{}</div>
+	<div class=num style="top: 270px;">0</div>
+	{}
+</div>
+'''
+
+stat_chart_col='<div class=col style="height: {}px; width:{}px;"></div>'
