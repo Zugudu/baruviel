@@ -6,6 +6,7 @@ import pages
 from os import path
 from bottle import route, run, static_file, abort, post, request, redirect, error, response
 from hashlib import sha3_256 as sha3
+from math import floor
 
 
 db = sqlite3.connect('db')
@@ -83,7 +84,9 @@ def get_header(session, request, sql):
 	#return err_mes + pages.header.format(sql.fetchone()[0], session[1])
 	#A VERY BAD IMPLEMENTATION DOWN
 	if session[1] in (1, 2, 3):
-		return err_mes + pages.header.format(sql.fetchone()[0], session[1], '<a href=\'/stat\'><div class=\'w3-bar-item w3-hover-red\'>Статистика сайту</div></a>')
+		return err_mes + pages.header.format(sql.fetchone()[0], session[1],
+		'<a href=\'/stat\'><div class=\'w3-bar-item w3-hover-red\'>Статистика сайту</div></a>\
+		<a href=\'/stat_c\'><div class=\'w3-bar-item w3-hover-red\'>Графікі</div></a>')
 	else:
 		return err_mes + pages.header.format(sql.fetchone()[0], session[1], '')
 
@@ -442,6 +445,35 @@ def statistic(session):
 				ret[i] += el
 				
 		return opt.main(pages.stat.format(ret[0], ret[1]), get_header(session, request))
+	else:
+		redirect('/')
+
+
+@route('/stat_c')
+@login
+def statistic_chart(session):
+	if session[1] in (1, 2, 3):
+		ret = ['', '']
+		for i in range(2):
+			list = ''
+			last = 0
+			with open(path.join('.', 'log', str(i)), 'r') as fd:
+				data = fd.read().split('\n')
+				data.remove('')
+				max = 0
+				data_count = []
+				for r in data:
+					r = r.replace('\n', '').split('\t')
+					data_count.append(int(r[1]))
+					if int(r[1]) > max:
+						max = int(r[1])
+				
+				for j in data_count:
+					list += pages.stat_chart_col.format(floor(j*300/max), floor((810/len(data_count)))-2)
+				
+				ret[i] = pages.stat_chart.format(max, list)
+		
+		return opt.main(pages.stat_c.format(ret[0], ret[1]), get_header(session, request))
 	else:
 		redirect('/')
 

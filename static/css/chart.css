@@ -1,0 +1,26 @@
+.wrap{
+	margin: 0 auto;
+	width: 810px;
+}
+.chart{
+	border:2px solid;
+	height:300px;
+	text-align: left;
+	box-sizing: content-box;
+}
+.col{
+	background-color:green;
+	width:30px;
+	height:300px;
+	margin: 0px 1px;
+	display: inline-block;
+	position: relative;
+	bottom: 30px;
+}
+.num{
+	position: relative;
+	width: 30px;
+	height: 15px;
+	left: -30px;
+	font-size: 15px;
+}
