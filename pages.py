@@ -62,6 +62,7 @@ done_task_btn_short = "<a href='/task/done/{}' class='w3-button w3-block w3-blue
 remove_task_btn = "<a href='/task/remove/{}' class='w3-button w3-block w3-blue w3-hover-red w3-margin-top' style='width:300px;'>Видалити завдання</a>"
 edit_task_btn = "<a href='/{}task/edit/{}' class='w3-button w3-block w3-blue w3-hover-red w3-margin-top' style='width:300px;'>Змінити завдання</a>"
 edit_task_btn_short = "<a href='/{}task/edit/{}' class='w3-button w3-block w3-blue w3-hover-red'>Змінити</a>"
+del_subtask="<a href='/subtask/del/{}' class='w3-button w3-block w3-blue w3-hover-red w3-margin-top' style='width:300px;'>Видалити</a>"
 
 
 _task_info = '''

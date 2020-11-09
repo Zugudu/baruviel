@@ -279,7 +279,7 @@ def subtask_edit(id, sql, session):
 			else:
 				frmt = '<option value={}>{}</option>'
 			task_list += frmt.format(i[0], i[1])
-		return opt.main(pages.give_subtask.format(task[0], user_list, task_list, 'Доручити'), get_header(session, request))
+		return opt.main(pages.give_subtask.format(task[0], user_list, task_list, 'Доручити') + pages.del_subtask.format(id), get_header(session, request))
 	else:
 		redirect('/')
 
@@ -304,6 +304,19 @@ def p_subtask_edit(id, sql, session):
 			redirect('/task/' + str(task))
 		else:
 			redirect('/subtask/edit/' + str(id) + '?err=0')
+	else:
+		redirect('/subtask/edit/' + str(id) + '?err=1')
+		
+
+@route('/subtask/del/<id:int>')
+@sql
+@login
+def p_subtask_del(id, sql, session):
+	sql.execute('select who, id_task from v_subtask where id=?;', (id, ))
+	task = sql.fetchone()
+	if task[0] == session[1]:
+		sql.execute('delete from subtask where id=?;', (id, ))
+		redirect('/task/' + str(task[1]))
 	else:
 		redirect('/subtask/edit/' + str(id) + '?err=1')
 
